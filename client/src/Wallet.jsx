@@ -8,11 +8,9 @@ function Wallet({
   setAddress,
   balance,
   setBalance,
-  signature,
-  setSignature,
+  privateKey,
+  setPrivateKey,
 }) {
-  const [privateKey, setPrivateKey] = useState("");
-
   async function onChange(evt) {
     const privateKey = evt.target.value;
     setPrivateKey(privateKey);
@@ -26,11 +24,6 @@ function Wallet({
     } else {
       setBalance(0);
     }
-  }
-
-  // TODO Use private key to generate a signature
-  async function generateSignature(privateKey) {
-    setSignature(await secp.sign("messageHash", privateKey));
   }
 
   return (
