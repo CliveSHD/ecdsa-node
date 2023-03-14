@@ -24,6 +24,9 @@ app.post("/send", (req, res) => {
   setInitialBalance(sender);
   setInitialBalance(recipient);
 
+  // TODO Receive signature
+  // TODO verify signature
+
   if (balances[sender] < amount) {
     res.status(400).send({ message: "Not enough funds!" });
   } else {
