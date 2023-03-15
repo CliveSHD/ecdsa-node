@@ -3,6 +3,9 @@ const app = express();
 const cors = require("cors");
 const port = 3042;
 
+const secp = require("ethereum-cryptography/secp256k1");
+const { toHex } = require("ethereum-cryptography/utils");
+
 app.use(cors());
 app.use(express.json());
 
@@ -23,20 +26,26 @@ app.get("/balance/:address", (req, res) => {
 });
 
 app.post("/send", (req, res) => {
-  const { sender, recipient, amount } = req.body;
+  const { message, msgHash, signature } = req.body;
+  const sig = new Uint8Array(Object.values(signature[0]));
+  const hash = new Uint8Array(Object.values(msgHash));
 
-  setInitialBalance(sender);
-  setInitialBalance(recipient);
+  setInitialBalance(message.sender);
+  setInitialBalance(message.recipient);
 
-  // TODO Receive signature
-  // TODO verify signature
+  const publicKey = secp.recoverPublicKey(hash, sig, signature[1]);
+  const verified = secp.verify(sig, hash, publicKey);
 
-  if (balances[sender] < amount) {
+  if (balances[message.sender] < message.amount) {
     res.status(400).send({ message: "Not enough funds!" });
+  } else if (toHex(publicKey) !== message.sender) {
+    res.status(400).send({ message: "Not your account!" });
+  } else if (!verified) {
+    res.status(400).send({ message: "Not verified!" });
   } else {
-    balances[sender] -= amount;
-    balances[recipient] += amount;
-    res.send({ balance: balances[sender] });
+    balances[message.sender] -= message.amount;
+    balances[message.recipient] += message.amount;
+    res.send({ balance: balances[message.sender] });
   }
 });
 
